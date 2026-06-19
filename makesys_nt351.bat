@@ -1,0 +1,6 @@
+set INCLUDE=C:\DDK\inc;C:\MSVC20\INCLUDE
+set LIB=C:\DDK\lib\i386\FREE;C:\MSVC20\LIB
+
+C:\MSVC20\BIN\CL.EXE /c /DNT351 /D_X86_ /DSTD_CALL /DNDEBUG /Gz /Ox /W3 dsb16.c
+C:\MSVC20\BIN\LINK.EXE /SUBSYSTEM:NATIVE /ENTRY:DriverEntry /OUT:dsb16.sys dsb16.obj ntoskrnl.lib hal.lib OLDNAMES.LIB
+del dsb16.obj
