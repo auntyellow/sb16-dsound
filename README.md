@@ -10,6 +10,7 @@ Emulators like QEMU and v86 can perfectly emulate Sound Blaster 16 hardware. How
 
 ## Supported platforms
 
+- Windows 7 / 10 (32-bit only)
 - Windows NT 4.0 / 2000 / XP / ReactOS
 - Windows NT 3.51: msvcrt.dll (from Windows NT 4.0) is required
 
