@@ -532,5 +532,8 @@ HRESULT WINAPI DirectSoundCreate(LPCGUID lpGuid, LPDIRECTSOUND *ppDS, LPUNKNOWN 
 
 BOOL WINAPI DllMain(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
 {
+    if (dwReason == DLL_PROCESS_ATTACH) {
+        DisableThreadLibraryCalls(hDll);
+    }
     return TRUE;
 }
