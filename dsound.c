@@ -31,7 +31,7 @@ typedef struct {
     LONG ref;
     WAVEFORMATEX wfx;
     DWORD shrink, startTick, size;
-    BYTE *data;
+    LPBYTE data;
     HANDLE hDevice;
 } SB16DirectSoundBuffer;
 
@@ -177,7 +177,7 @@ HRESULT STDMETHODCALLTYPE DSB_Play(SB16DirectSoundBuffer *This, DWORD a, DWORD b
 {
     DWORD shrink, size, i, j, bytesWritten, startTick;
     LONG nSample;
-    BYTE *pBuf;
+    LPBYTE pBuf;
     BYTE data[BUFFER_SIZE];
     printf(("DirectSoundBuffer::Play(This=0x%p, a=0x%08X, b=0x%08X, c=0x%08X)\n", This, a, b, c));
     if (This->data == NULL) {
@@ -364,7 +364,7 @@ HRESULT STDMETHODCALLTYPE DS_CreateSoundBuffer(SB16DirectSound *This, LPCDSBUFFE
     printf(("DirectSound::CreateSoundBuffer(This=0x%p, desc=0x%p, flags=0x%08X, size=%lu, ppBuf=0x%p, unk=0x%p)\n",
             This, desc, desc->dwFlags, desc->dwBufferBytes, ppBuf, unk));
 
-    buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SB16DirectSoundBuffer));
+    buf = (SB16DirectSoundBuffer *) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SB16DirectSoundBuffer));
     if (buf == NULL) {
         printf(("DirectSound::CreateSoundBuffer can't allocate IDirectSoundBuffer: %lu\n", GetLastError()));
         return DSERR_OUTOFMEMORY;
@@ -390,7 +390,7 @@ HRESULT STDMETHODCALLTYPE DS_CreateSoundBuffer(SB16DirectSound *This, LPCDSBUFFE
     if (buf->size == 0) {
         buf->data = NULL;
     } else {
-        buf->data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buf->size);
+        buf->data = (LPBYTE) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buf->size);
         if (buf->data == NULL) {
             printf(("DirectSound::CreateSoundBuffer can't allocate %lu (dwBufferBytes) bytes: %lu\n", buf->size, GetLastError()));
             HeapFree(GetProcessHeap(), 0, buf);
@@ -422,12 +422,11 @@ HRESULT STDMETHODCALLTYPE DS_GetCaps(SB16DirectSound *This, LPDSCAPS caps)
 
 HRESULT STDMETHODCALLTYPE DS_DuplicateSoundBuffer(SB16DirectSound *This, LPDIRECTSOUNDBUFFER pOriginal, LPDIRECTSOUNDBUFFER *ppDuplicate)
 {
-    SB16DirectSoundBuffer *orig;
-    SB16DirectSoundBuffer *dup;
+    SB16DirectSoundBuffer *orig, *dup;
     printf(("DirectSound::DuplicateSoundBuffer(This=0x%p, pOriginal=0x%p, ppDuplicate=0x%p)\n", This, pOriginal, ppDuplicate));
 
     orig = (SB16DirectSoundBuffer *) pOriginal;
-    dup = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SB16DirectSoundBuffer));
+    dup = (SB16DirectSoundBuffer *) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SB16DirectSoundBuffer));
     if (dup == NULL) {
         printf(("DirectSound::DuplicateSoundBuffer can't allocate IDirectSoundBuffer: %lu\n", GetLastError()));
         return DSERR_OUTOFMEMORY;
@@ -444,7 +443,7 @@ HRESULT STDMETHODCALLTYPE DS_DuplicateSoundBuffer(SB16DirectSound *This, LPDIREC
         dup->data = NULL;
     } else {
         // TODO dup->data = orig->data, AddRef (implement a global ref for data)
-        dup->data = HeapAlloc(GetProcessHeap(), 0, dup->size);
+        dup->data = (LPBYTE) HeapAlloc(GetProcessHeap(), 0, dup->size);
         if (dup->data == NULL) {
             printf(("DirectSound::DuplicateSoundBuffer can't allocate %lu (pOriginal->dwBufferBytes) bytes: %lu\n", dup->size, GetLastError()));
             HeapFree(GetProcessHeap(), 0, dup);
@@ -515,7 +514,7 @@ HRESULT WINAPI DirectSoundCreate(LPCGUID lpGuid, LPDIRECTSOUND *ppDS, LPUNKNOWN 
         return DSERR_NODRIVER;
     }
 
-    obj = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SB16DirectSound));
+    obj = (SB16DirectSound *) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SB16DirectSound));
     if (obj == NULL) {
         printf(("DirectSoundCreate can't allocate IDirectSound: %lu\n", GetLastError()));
         CloseHandle(hDevice);
