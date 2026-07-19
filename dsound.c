@@ -8,10 +8,12 @@
     #define printf(x) DebugPrint x
 
     void DebugPrint(const char *format, ...) {
-        char buffer[512];
         va_list args;
+        char buffer[512];
+        int i;
         va_start(args, format);
-        _vsnprintf(buffer, sizeof(buffer), format, args);
+        i = _vsnprintf(buffer, sizeof(buffer), format, args);
+        buffer[i < 0 ? sizeof(buffer) - 1 : i] = '\0';
         OutputDebugStringA(buffer);
         va_end(args);
     }
