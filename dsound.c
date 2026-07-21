@@ -51,7 +51,7 @@ HRESULT STDMETHODCALLTYPE DSB_QueryInterface(SB16DirectSoundBuffer *This, REFIID
 
 ULONG STDMETHODCALLTYPE DSB_AddRef(SB16DirectSoundBuffer *This)
 {
-    printf(("DirectSoundBuffer::AddRef(This=0x%p) -> before=%ld\n", This, This ? This->ref : 0));
+    printf(("DirectSoundBuffer::AddRef(This=0x%p) -> before=%ld\n", This, This->ref));
     This->ref ++;
     return This->ref;
 }
@@ -59,7 +59,7 @@ ULONG STDMETHODCALLTYPE DSB_AddRef(SB16DirectSoundBuffer *This)
 ULONG STDMETHODCALLTYPE DSB_Release(SB16DirectSoundBuffer *This)
 {
     ULONG ref;
-    printf(("DirectSoundBuffer::Release(This=0x%p) -> before=%ld\n", This, This ? This->ref : 0));
+    printf(("DirectSoundBuffer::Release(This=0x%p) -> before=%ld\n", This, This->ref));
     This->ref --;
     ref = This->ref;
     if (ref == 0) {
@@ -113,7 +113,7 @@ HRESULT STDMETHODCALLTYPE DSB_GetCurrentPosition(SB16DirectSoundBuffer *This, LP
 
 HRESULT STDMETHODCALLTYPE DSB_GetFormat(SB16DirectSoundBuffer *This, LPWAVEFORMATEX wfx, DWORD size, LPDWORD written)
 {
-    printf(("DirectSoundBuffer::GetFormat(This=0x%p, wfx=0x%p, size=%u, written=0x%p)\n", This, wfx, size, written));
+    printf(("DirectSoundBuffer::GetFormat(This=0x%p, wfx=0x%p, size=%lu, written=0x%p)\n", This, wfx, size, written));
     if (size < sizeof(WAVEFORMATEX)) {
         return DSERR_INVALIDPARAM;
     }
@@ -146,7 +146,7 @@ HRESULT STDMETHODCALLTYPE DSB_GetFrequency(SB16DirectSoundBuffer *This, LPDWORD 
 HRESULT STDMETHODCALLTYPE DSB_GetStatus(SB16DirectSoundBuffer *This, LPDWORD status)
 {
     *status = GetPlayingPos(This) > 0 ? DSBSTATUS_PLAYING : 0;
-    printf(("DirectSoundBuffer::GetStatus(This=0x%p) returns 0x%08X\n", This, *status));
+    printf(("DirectSoundBuffer::GetStatus(This=0x%p) returns 0x%08lX\n", This, *status));
     return DS_OK;
 }
 
@@ -159,7 +159,7 @@ HRESULT STDMETHODCALLTYPE DSB_Initialize(SB16DirectSoundBuffer *This, LPDIRECTSO
 HRESULT STDMETHODCALLTYPE DSB_Lock(SB16DirectSoundBuffer *This, DWORD offset, DWORD bytes,
                                    LPVOID *p1, LPDWORD b1, LPVOID *p2, LPDWORD b2, DWORD flags)
 {
-    printf(("DirectSoundBuffer::Lock(This=0x%p, offset=%u, bytes=%u, p1=0x%p, b1=0x%p, p2=0x%p, b2=0x%p, flags=0x%08X)\n",
+    printf(("DirectSoundBuffer::Lock(This=0x%p, offset=%lu, bytes=%lu, p1=0x%p, b1=0x%p, p2=0x%p, b2=0x%p, flags=0x%08lX)\n",
            This, offset, bytes, p1, b1, p2, b2, flags));
     if (This->data == NULL || offset > This->size || bytes > This->size || offset + bytes > This->size) {
         return DSERR_INVALIDPARAM;
@@ -175,13 +175,13 @@ HRESULT STDMETHODCALLTYPE DSB_Lock(SB16DirectSoundBuffer *This, DWORD offset, DW
     return DS_OK;
 }
 
-HRESULT STDMETHODCALLTYPE DSB_Play(SB16DirectSoundBuffer *This, DWORD a, DWORD b, DWORD c)
+HRESULT STDMETHODCALLTYPE DSB_Play(SB16DirectSoundBuffer *This, DWORD reserved1, DWORD priority, DWORD flags)
 {
     DWORD shrink, size, i, j, bytesWritten, startTick;
     LONG nSample;
     LPBYTE pBuf;
     BYTE data[BUFFER_SIZE];
-    printf(("DirectSoundBuffer::Play(This=0x%p, a=0x%08X, b=0x%08X, c=0x%08X)\n", This, a, b, c));
+    printf(("DirectSoundBuffer::Play(This=0x%p, reserved1=%lu, priority=%lu, flags=0x%08lX)\n", This, reserved1, priority, flags));
     if (This->data == NULL) {
         return DS_OK;
     }
@@ -233,7 +233,7 @@ HRESULT STDMETHODCALLTYPE DSB_Play(SB16DirectSoundBuffer *This, DWORD a, DWORD b
 
 HRESULT STDMETHODCALLTYPE DSB_SetCurrentPosition(SB16DirectSoundBuffer *This, DWORD pos)
 {
-    printf(("DirectSoundBuffer::SetCurrentPosition(This=0x%p, pos=%u)\n", This, pos));
+    printf(("DirectSoundBuffer::SetCurrentPosition(This=0x%p, pos=%lu)\n", This, pos));
     return DS_OK;
 }
 
@@ -272,7 +272,7 @@ HRESULT STDMETHODCALLTYPE DSB_SetPan(SB16DirectSoundBuffer *This, LONG pan)
 
 HRESULT STDMETHODCALLTYPE DSB_SetFrequency(SB16DirectSoundBuffer *This, DWORD freq)
 {
-    printf(("DirectSoundBuffer::SetFrequency(This=0x%p, freq=%u)\n", This, freq));
+    printf(("DirectSoundBuffer::SetFrequency(This=0x%p, freq=%lu)\n", This, freq));
     This->wfx.nSamplesPerSec = (WORD) freq;
     CalcShrink(This);
     return DS_OK;
@@ -290,7 +290,7 @@ HRESULT STDMETHODCALLTYPE DSB_Stop(SB16DirectSoundBuffer *This)
 
 HRESULT STDMETHODCALLTYPE DSB_Unlock(SB16DirectSoundBuffer *This, LPVOID p1, DWORD b1, LPVOID p2, DWORD b2)
 {
-    printf(("DirectSoundBuffer::Unlock(This=0x%p, p1=0x%p, b1=%u, p2=0x%p, b2=%u)\n", This, p1, b1, p2, b2));
+    printf(("DirectSoundBuffer::Unlock(This=0x%p, p1=0x%p, b1=%lu, p2=0x%p, b2=%lu)\n", This, p1, b1, p2, b2));
     return DS_OK;
 }
 
@@ -342,14 +342,14 @@ HRESULT STDMETHODCALLTYPE DS_QueryInterface(SB16DirectSound *This, REFIID riid, 
 }
 
 ULONG STDMETHODCALLTYPE DS_AddRef(SB16DirectSound *This) {
-    printf(("DirectSound::AddRef(This=0x%p) -> before=%ld\n", This, This ? This->ref : 0));
+    printf(("DirectSound::AddRef(This=0x%p) -> before=%ld\n", This, This->ref));
     This->ref ++;
     return This->ref;
 }
 
 ULONG STDMETHODCALLTYPE DS_Release(SB16DirectSound *This) {
     ULONG ref;
-    printf(("DirectSound::Release(This=0x%p) -> before=%ld\n", This, This ? This->ref : 0));
+    printf(("DirectSound::Release(This=0x%p) -> before=%ld\n", This, This->ref));
     This->ref --;
     ref = This->ref;
     if (ref == 0) {
@@ -363,7 +363,7 @@ HRESULT STDMETHODCALLTYPE DS_CreateSoundBuffer(SB16DirectSound *This, LPCDSBUFFE
                                                LPDIRECTSOUNDBUFFER *ppBuf, LPUNKNOWN unk)
 {
     SB16DirectSoundBuffer *buf;
-    printf(("DirectSound::CreateSoundBuffer(This=0x%p, desc=0x%p, flags=0x%08X, size=%lu, ppBuf=0x%p, unk=0x%p)\n",
+    printf(("DirectSound::CreateSoundBuffer(This=0x%p, desc=0x%p, flags=0x%08lX, size=%lu, ppBuf=0x%p, unk=0x%p)\n",
             This, desc, desc->dwFlags, desc->dwBufferBytes, ppBuf, unk));
 
     buf = (SB16DirectSoundBuffer *) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SB16DirectSoundBuffer));
@@ -461,7 +461,7 @@ HRESULT STDMETHODCALLTYPE DS_DuplicateSoundBuffer(SB16DirectSound *This, LPDIREC
 }
 
 HRESULT STDMETHODCALLTYPE DS_SetCooperativeLevel(SB16DirectSound *This, HWND hwnd, DWORD level) {
-    printf(("DirectSound::SetCooperativeLevel(This=0x%p, hwnd=0x%p, level=0x%08X)\n", This, hwnd, level));
+    printf(("DirectSound::SetCooperativeLevel(This=0x%p, hwnd=0x%p, level=%lu)\n", This, hwnd, level));
     return DS_OK;
 }
 
@@ -478,9 +478,9 @@ HRESULT STDMETHODCALLTYPE DS_GetSpeakerConfig(SB16DirectSound *This, LPDWORD pdw
     return DS_OK;
 }
 
-HRESULT STDMETHODCALLTYPE DS_SetSpeakerConfig(SB16DirectSound *This, DWORD dwConfig)
+HRESULT STDMETHODCALLTYPE DS_SetSpeakerConfig(SB16DirectSound *This, DWORD config)
 {
-    printf(("DirectSound::SetSpeakerConfig(This=0x%p, dwConfig=0x%08X)\n", This, dwConfig));
+    printf(("DirectSound::SetSpeakerConfig(This=0x%p, dwConfig=0x%08lX)\n", This, config));
     return DS_OK;
 }
 

@@ -47,7 +47,7 @@ typedef struct {
 
 NTSTATUS Stub(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
   PIO_STACK_LOCATION stack = IoGetCurrentIrpStackLocation(Irp);
-  printf(("Stub: %d\n", stack->MajorFunction));
+  printf(("Stub: %u\n", stack->MajorFunction));
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
   return STATUS_SUCCESS;
 }
