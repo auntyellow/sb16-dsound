@@ -21,6 +21,8 @@ typedef struct {
 } CHUNKHEADER;
 #pragma pack(pop)
 
+extern BOOL DirectSB16Write(LPVOID lpUserBuffer, DWORD dwBytesToWrite);
+
 int main(int argc, char* argv[]) {
     FILE *fp;
     WAVHEADER header;
@@ -100,18 +102,23 @@ int main(int argc, char* argv[]) {
     fclose(fp);
 
     // 3. Open DirectSB16 driver device
+    printf("Playing...\n");
     hDevice = CreateFile("\\\\.\\DirectSB16", GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE) {
         printf("Error: Cannot open DirectSB16 driver. (Error code: %lu)\n", GetLastError());
-        return 1;
-    }
-
-    // 4. Write to driver in chunks for playback (max 64KB per chunk)
-    printf("Playing...\n");
-    if (WriteFile(hDevice, pcmBuffer, bytesRead, &bytesWritten, NULL)) {
-        printf("Playback Finished!\n");
+        // 4. Write to driver in chunks for playback (max 64KB per chunk)
+        if (DirectSB16Write(pcmBuffer, bytesRead)) {
+            printf("Playback Finished!\n");
+        } else {
+            printf("Error: Failed to call DirectSB16Write\n");
+        }
     } else {
-        printf("Error: WriteFile failed during playback. Code: %lu\n", GetLastError());
+        // 4. Write to driver in chunks for playback (max 64KB per chunk)
+        if (WriteFile(hDevice, pcmBuffer, bytesRead, &bytesWritten, NULL)) {
+            printf("Playback Finished!\n");
+        } else {
+            printf("Error: WriteFile failed during playback. Code: %lu\n", GetLastError());
+        }
     }
 
     CloseHandle(hDevice);

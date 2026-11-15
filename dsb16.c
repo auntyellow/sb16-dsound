@@ -63,7 +63,7 @@ VOID DspWrite(UCHAR value) {
   if (timeout == 0) {
     printf(("DirectSB16: DspWrite timeout waiting for DSP_STATUS. Ignored byte: 0x%02X.\n", value));
   } else {
-    printf(("DirectSB16: Waited %u microseconds before write 0x%02X.\n", (1000 - timeout)*10, value));
+    printf(("DirectSB16: Waited %lu microseconds before write 0x%02X.\n", (1000 - timeout)*10, value));
     WRITE_PORT_UCHAR((PUCHAR) DSP_WRITE, value);
   }
 }
@@ -88,7 +88,7 @@ BOOLEAN DspReset(void) {
     printf(("DirectSB16: DspRead timeout waiting for data available.\n"));
     return FALSE;
   }
-  printf(("DirectSB16: Waited %u microseconds after reset.\n", (1000 - timeout)*10));
+  printf(("DirectSB16: Waited %lu microseconds after reset.\n", (1000 - timeout)*10));
   resp = READ_PORT_UCHAR((PUCHAR) DSP_READ);
   if (resp != 0xAA) {
     printf(("DirectSB16: DSP reset failed, response 0x%02X.\n", resp));
@@ -144,7 +144,7 @@ NTSTATUS DirectWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
   userBuffer = Irp->AssociatedIrp.SystemBuffer;
   ext = (DIRECT_SB16_EXT *) DeviceObject->DeviceExtension;
 
-  printf(("DirectSB16: Write called, length=%u, userBuffer=0x%p\n", length, userBuffer));
+  printf(("DirectSB16: Write called, length=%lu, userBuffer=0x%p\n", length, userBuffer));
 
   if (length == 0 || userBuffer == NULL) {
     printf(("DirectSB16: Write called with zero length or NULL buffer.\n"));
@@ -156,7 +156,7 @@ NTSTATUS DirectWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 
   // Limit single write size (ISA DMA counter limit is 64KB)
   if (length > MAX_LENGTH) {
-    printf(("DirectSB16: Write length %u too large, truncated to %u\n", length, MAX_LENGTH));
+    printf(("DirectSB16: Write length %lu too large, truncated to %u\n", length, MAX_LENGTH));
     length = MAX_LENGTH;
   }
 

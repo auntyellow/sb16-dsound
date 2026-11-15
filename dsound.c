@@ -1,22 +1,38 @@
 #include <windows.h>
 #include <dsound.h>
 #include <stdio.h>
+#include <io.h>
 
 #ifdef NDEBUG
-    #define printf(x)
-#else
-    #define printf(x) DebugPrint x
 
-    void DebugPrint(const char *format, ...) {
-        va_list args;
-        char buffer[512];
-        int i;
-        va_start(args, format);
+#define printf(x)
+
+#else
+
+#define printf(x) DebugPrint x
+
+static FILE *fpDebug = NULL;
+static int fdDebug = -1;
+
+static void DebugPrint(const char *format, ...) {
+    va_list args;
+    char buffer[1024];
+    int i;
+    va_start(args, format);
+    if (fpDebug) {
+        vfprintf(fpDebug, format, args);
+        fflush(fpDebug);
+        if (fdDebug != -1) {
+            _commit(fdDebug);
+        }
+    } else {
         i = _vsnprintf(buffer, sizeof(buffer), format, args);
         buffer[i < 0 ? sizeof(buffer) - 1 : i] = '\0';
         OutputDebugStringA(buffer);
-        va_end(args);
     }
+    va_end(args);
+}
+
 #endif
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
@@ -27,6 +43,8 @@
 
 #define BUFFER_SIZE 65535
 #define IS_8BIT(x) (x <= 8)
+
+extern BOOL DirectSB16Write(LPVOID lpUserBuffer, DWORD dwBytesToWrite);
 
 typedef struct {
     IDirectSoundBufferVtbl *lpVtbl;
@@ -218,11 +236,18 @@ HRESULT STDMETHODCALLTYPE DSB_Play(SB16DirectSoundBuffer *This, DWORD reserved1,
         }
     }
 
-    if (!WriteFile(This->hDevice, data, size, &bytesWritten, NULL)) {
-        printf(("DirectSoundBuffer::Play can't write into DirectSB16: %lu\n", GetLastError()));
-        return DSERR_GENERIC;
+    if (This->hDevice == INVALID_HANDLE_VALUE) {
+        if (!DirectSB16Write(data, size)) {
+            printf(("DirectSoundBuffer::Play failed to call DirectSB16Write\n"));
+            return DSERR_GENERIC;
+        }
+    } else {
+        if (!WriteFile(This->hDevice, data, size, &bytesWritten, NULL)) {
+            printf(("DirectSoundBuffer::Play can't write into DirectSB16: %lu\n", GetLastError()));
+            return DSERR_GENERIC;
+        }
+        printf(("DirectSoundBuffer::Play wrote %lu bytes into DirectSB16\n", bytesWritten));
     }
-    printf(("DirectSoundBuffer::Play wrote %lu bytes into DirectSB16\n", bytesWritten));
     startTick = GetTickCount();
     if (startTick == 0) {
         startTick = 1;
@@ -283,7 +308,11 @@ HRESULT STDMETHODCALLTYPE DSB_Stop(SB16DirectSoundBuffer *This)
     DWORD bytesWritten;
     BYTE byte = 128;
     printf(("DirectSoundBuffer::Stop(This=0x%p)\n", This));
-    WriteFile(This->hDevice, &byte, 1, &bytesWritten, NULL);
+    if (This->hDevice == INVALID_HANDLE_VALUE) {
+        DirectSB16Write(&byte, 1);
+    } else {
+        WriteFile(This->hDevice, &byte, 1, &bytesWritten, NULL);
+    }
     This->startTick = 0;
     return DS_OK;
 }
@@ -353,7 +382,9 @@ ULONG STDMETHODCALLTYPE DS_Release(SB16DirectSound *This) {
     This->ref --;
     ref = This->ref;
     if (ref == 0) {
-        CloseHandle(This->hDevice);
+        if (This->hDevice != INVALID_HANDLE_VALUE) {
+            CloseHandle(This->hDevice);
+        }
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -513,7 +544,8 @@ HRESULT WINAPI DirectSoundCreate(LPCGUID lpGuid, LPDIRECTSOUND *ppDS, LPUNKNOWN 
     hDevice = CreateFile("\\\\.\\DirectSB16", GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE) {
         printf(("DirectSoundCreate can't open DirectSB16 driver: %lu\n", GetLastError()));
-        return DSERR_NODRIVER;
+        // try dsb16_9x
+        // return DSERR_NODRIVER;
     }
 
     obj = (SB16DirectSound *) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SB16DirectSound));
@@ -533,8 +565,24 @@ HRESULT WINAPI DirectSoundCreate(LPCGUID lpGuid, LPDIRECTSOUND *ppDS, LPUNKNOWN 
 
 BOOL WINAPI DllMain(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
 {
+    OSVERSIONINFO osvi;
     if (dwReason == DLL_PROCESS_ATTACH) {
         DisableThreadLibraryCalls(hDll);
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+        GetVersionEx(&osvi);
+#ifndef NDEBUG
+        if (osvi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
+            fpDebug = fopen("dsound.log", "wt");
+            // enable fdDebug for hard lockup, but may interrupt playback in v86 emulator
+            // fdDebug = _fileno(fpDebug);
+        }
+    } else if (dwReason == DLL_PROCESS_DETACH) {
+        if (fpDebug) {
+            fclose(fpDebug);
+            fpDebug = NULL;
+            fdDebug = -1;
+        }
+#endif
     }
     return TRUE;
 }
