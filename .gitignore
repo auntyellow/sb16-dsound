@@ -1,5 +1,4 @@
+dsound.dll
+*.exe
 /.project
 /dsb16.sys
-/playsb16.exe
-/dsound.dll
-/playds.exe

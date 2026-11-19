@@ -1,0 +1,1 @@
+i686-w64-mingw32-gcc -O3 -Wall -Wl,--enable-stdcall-fixup -s dsound_wrapper.c -shared -o dsound.dll -ldxguid ../dsound.def
