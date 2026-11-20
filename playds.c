@@ -23,7 +23,7 @@ typedef struct {
 } CHUNKHEADER;
 #pragma pack(pop)
 
-BYTE pcmBuffer[BUFFER_SIZE];
+static BYTE pcmBuffer[BUFFER_SIZE];
 
 int main(int argc, char* argv[]) {
     FILE *fp;
