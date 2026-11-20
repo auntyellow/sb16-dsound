@@ -50,7 +50,7 @@ typedef struct {
     IDirectSoundBufferVtbl *lpVtbl;
     LONG ref;
     WAVEFORMATEX wfx;
-    DWORD shrink, startTick, size;
+    DWORD dwFlags, shrink, startTick, size;
     LPBYTE data;
     HANDLE hDevice;
 } SB16DirectSoundBuffer;
@@ -95,6 +95,8 @@ HRESULT STDMETHODCALLTYPE DSB_GetCaps(SB16DirectSoundBuffer *This, LPDSBCAPS cap
     printf(("DirectSoundBuffer::GetCaps(This=0x%p, caps=0x%p)\n", This, caps));
     ZeroMemory(caps, sizeof(*caps));
     caps->dwSize = sizeof(*caps);
+    caps->dwFlags = This->dwFlags;
+    caps->dwBufferBytes = BUFFER_SIZE;
     return DS_OK;
 }
 
@@ -198,7 +200,8 @@ HRESULT STDMETHODCALLTYPE DSB_Play(SB16DirectSoundBuffer *This, DWORD reserved1,
     DWORD shrink, size, i, j, bytesWritten, startTick;
     LONG nSample;
     LPBYTE pBuf;
-    BYTE data[BUFFER_SIZE];
+    // avoid NFS3 stack overflow
+    static BYTE data[BUFFER_SIZE];
     printf(("DirectSoundBuffer::Play(This=0x%p, reserved1=%lu, priority=%lu, flags=0x%08lX)\n", This, reserved1, priority, flags));
     if (This->data == NULL) {
         return DS_OK;
@@ -405,6 +408,7 @@ HRESULT STDMETHODCALLTYPE DS_CreateSoundBuffer(SB16DirectSound *This, LPCDSBUFFE
     buf->lpVtbl = &SB16DSB_Vtbl;
     buf->ref = 1;
 
+    buf->dwFlags = desc->dwFlags;
     if (desc->lpwfxFormat == NULL) {
         buf->wfx.wFormatTag = WAVE_FORMAT_PCM;
         buf->wfx.nChannels = 1;
