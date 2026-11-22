@@ -19,35 +19,39 @@ Emulators like QEMU and v86 can perfectly emulate Sound Blaster 16 hardware. How
 
 ## Supported platforms
 
-- Windows Vista / 7 / 8 / 10 (32-bit only)
-- Windows NT 4.0 / 2000 / XP / ReactOS
+- Windows 10 / 8 / 7 / Vista (32-bit only)
+- Windows XP / 2000 / NT 4.0 / ReactOS
 - Windows NT 3.51<sup> [2]</sup>
-- Windows 95 / 98<sup> [2,3]</sup>
+- Windows ME<sup> [3]</sup>
+- Windows 98<sup> [4]</sup>
+- Windows 95<sup> [2,4]</sup>
 
 Notes:
 
 1. DirectSB16 (`dsb16.sys`) is required for all NT-like OSes.
 2. `msvcrt.dll` (from Windows NT 4.0) is required.
-3. `DSB16MEM.COM` should be loaded in `AUTOEXEC.BAT`. No additional driver installation is required because of the built-in DirectSB16 for Win9x.
+3. `IFSHLP.SYS` should be hacked to reserve 64K conventional memory as DMA buffer. Sometimes system's SB16 driver should be disabled.
+4. `DSB16MEM.COM` should be loaded in `AUTOEXEC.BAT` to reserve 64K conventional memory as DMA buffer.
 
 ## How to use
 
 - Download `sb16-dsound.7z/img/iso` from [latest release](https://github.com/auntyellow/sb16-dsound/releases/latest).
 - Extract `sb16-dsound.7z` or mount `sb16-dsound.img/iso`.
+- Unnecessary to disable system's SB16 driver in most cases.
 
 ### WinNT
 
-- Under Windows 7 / XP / 2000 / ReactOS, run `install.bat` to install DirectSB16 (`dsb16.sys`). 
+- Under Windows 10 / 8 / 7 / Vista / XP / 2000 / ReactOS, run `install.bat` to install DirectSB16 (`dsb16.sys`).
 - Under Windows NT 4.0 / 3.51, move `install.bat` into `nt351` folder and run it.
 - Under Windows NT 3.51, copy `msvcrt.dll` from [Windows NT 4.0](https://winworldpc.com/product/windows-nt-40/40) into `system32` folder.
 - Put `dsound.dll` into the same folder as the game executable file, or backup and overwrite system's `dsound.dll`.
 
 ### Win9x
 
-- Copy `DSB16MEM.COM` into `C:\`, append line `C:\DSB16MEM.COM` to `C:\AUTOEXEC.BAT`, then restart.
-- Backup and overwrite system's `dsound.dll` (Win9x prefers system's DLL).
+- Under Windows Me, backup and override `IFSHLP.SYS` (because Windows ME can't load any other DOS drivers during startup, hacking `IFSHLP.SYS` is the only way to reserve DMA buffer), disable `StateMgr` in Startup tab in `msconfig` (to avoid restoring system's `DSOUND.DLL`), disable system's SB16 driver (it sometimes prevents DSP reset), then restart.
+- Under Windows 98 / 95, Copy `DSB16MEM.COM` into `C:\`, append line `C:\DSB16MEM.COM` to `C:\AUTOEXEC.BAT`, then restart.
 - Under Windows 95, copy `msvcrt.dll` from Windows NT 4.0 into `system` folder.
-- Windows ME is not supported, because it doesn't use `C:\AUTOEXEC.BAT` and can't load `DSB16MEM.COM` in real mode.
+- Backup and overwrite system's `dsound.dll` (Win9x prefers system's DLL).
 
 ## Known Limitations
 
@@ -64,7 +68,7 @@ This project is currently a proof-of-concept and has the following limitations:
 - Install [DDK 5.1.2600.1106](https://winworldpc.com/product/windows-sdk-ddk/xp-nt-51) into `C:\WINDDK\2600.1106`
 - Run `makesys.bat`
 
-### NT 3.51 / 4.0 Driver
+### NT 4.0 / 3.51 Driver
 
 - Install [MSVC 2.1](https://winworldpc.com/product/visual-c/2x) into `C:\MSVC20`
 - Install [DDK 3.51.1057.1](https://winworldpc.com/product/windows-sdk-ddk/nt-3x) into `C:\DDK`
